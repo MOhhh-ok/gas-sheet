@@ -1,0 +1,11 @@
+{
+  "name": "type-sheet",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@google/clasp": "^2.4.2",
+    "@types/google-apps-script": "^1.0.83",
+    "typescript": "^5.4.4"
+  }
+}
