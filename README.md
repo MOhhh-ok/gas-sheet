@@ -1,6 +1,6 @@
 # TypeSheet
 
-This is a script like ORM (but single table) in typescript.
+This is a script like ORM (but single table) in GAS (Google Apps Script) with typescript.
 
 ``` typescript
 type Model = {
