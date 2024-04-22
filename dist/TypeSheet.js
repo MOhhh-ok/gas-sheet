@@ -1,11 +1,11 @@
 "use strict";
 class TypeSheet {
-    constructor(sheet, header) {
+    constructor(sheet, ops) {
         if (!sheet) {
             throw new Error('Sheet not found');
         }
         this.sheet = sheet;
-        this.customHeader = header;
+        this.customHeader = ops === null || ops === void 0 ? void 0 : ops.header;
     }
     create(data) {
         const { header } = this.getData();

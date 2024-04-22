@@ -9,13 +9,15 @@ class TypeSheet<T> {
 
     constructor(
         sheet: GoogleAppsScript.Spreadsheet.Sheet | null,
-        header?: (keyof T)[]
+        ops?: {
+            header?: (keyof T)[];
+        }
     ) {
         if (!sheet) {
             throw new Error('Sheet not found');
         }
         this.sheet = sheet;
-        this.customHeader = header;
+        this.customHeader = ops?.header;
     }
 
     create(data: T): void {
