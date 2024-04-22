@@ -5,6 +5,9 @@ type TypeSheetData<T> = T & {
 
 class TypeSheet<T> {
     private sheet: GoogleAppsScript.Spreadsheet.Sheet;
+    private cache:
+        | { header: (keyof T)[]; data: TypeSheetData<T>[] }
+        | undefined;
     private customHeader: (keyof T)[] | undefined;
 
     constructor(
@@ -18,12 +21,6 @@ class TypeSheet<T> {
         }
         this.sheet = sheet;
         this.customHeader = ops?.header;
-    }
-
-    create(data: T): void {
-        const { header } = this.getData();
-        const row = header.map((key) => data[key]);
-        this.sheet.appendRow(row);
     }
 
     find(args: {
@@ -44,6 +41,17 @@ class TypeSheet<T> {
         return this.getData().data;
     }
 
+    clearCache(): void {
+        this.cache = undefined;
+    }
+
+    create(data: T): void {
+        const { header } = this.getData();
+        const row = header.map((key) => data[key]);
+        this.sheet.appendRow(row);
+        this.clearCache();
+    }
+
     update(args: {
         where: (row: TypeSheetData<T>) => boolean;
         set: Partial<T>;
@@ -58,16 +66,25 @@ class TypeSheet<T> {
     }
 
     private updateRow(header: (keyof T)[], rowNum: number, set: Partial<T>) {
-        for (const [key, value] of Object.entries(set)) {
-            const colIdx = header.indexOf(key as keyof T);
-            if (colIdx === -1) {
-                throw new Error(`Column ${key} not found`);
+        try {
+            for (const [key, value] of Object.entries(set)) {
+                const colIdx = header.indexOf(key as keyof T);
+                if (colIdx === -1) {
+                    throw new Error(`Column ${key} not found`);
+                }
+                this.sheet.getRange(rowNum, colIdx + 1).setValue(value);
             }
-            this.sheet.getRange(rowNum, colIdx + 1).setValue(value);
+        } catch (e: any) {
+            throw new Error(e);
+        } finally {
+            this.clearCache();
         }
     }
 
     private getData(): { header: (keyof T)[]; data: TypeSheetData<T>[] } {
+        if (this.cache) {
+            return this.cache;
+        }
         let [header, ...body] = this.sheet.getDataRange().getValues();
         header = this.customHeader || header;
         const result: TypeSheetData<T>[] = [];
@@ -80,6 +97,7 @@ class TypeSheet<T> {
             obj.__rowNum = rowIdx + 2;
             result.push(obj);
         });
-        return { header, data: result };
+        this.cache = { header, data: result };
+        return this.cache;
     }
 }
