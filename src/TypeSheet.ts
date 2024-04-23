@@ -11,15 +11,21 @@ class TypeSheet<T> {
     private customHeader: (keyof T)[] | undefined;
 
     constructor(
-        sheet: GoogleAppsScript.Spreadsheet.Sheet | null,
+        sheet: GoogleAppsScript.Spreadsheet.Sheet | string,
         ops?: {
             header?: (keyof T)[];
         }
     ) {
-        if (!sheet) {
-            throw new Error('Sheet not found');
+        if (typeof sheet === 'string') {
+            const s =
+                SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet);
+            if (!s) {
+                throw new Error('Sheet not found');
+            }
+            this.sheet = s;
+        } else {
+            this.sheet = sheet;
         }
-        this.sheet = sheet;
         this.customHeader = ops?.header;
     }
 
