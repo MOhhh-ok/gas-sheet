@@ -1,19 +1,21 @@
-type TypeSheetData<T> = T & {
+type SheetManagerData<T> = T & {
     __rowNum: number;
     __rowIdx: number;
 };
 
-class TypeSheet<T> {
+class SheetManager<T> {
     private sheet: GoogleAppsScript.Spreadsheet.Sheet;
     private cache:
-        | { header: (keyof T)[]; data: TypeSheetData<T>[] }
+        | { header: (keyof T)[]; data: SheetManagerData<T>[] }
         | undefined;
     private customHeader: (keyof T)[] | undefined;
+    private headerRowNum: number;
 
     constructor(
         sheet: GoogleAppsScript.Spreadsheet.Sheet | string,
         ops?: {
             header?: (keyof T)[];
+            headerRowNum?: number;
         }
     ) {
         if (typeof sheet === 'string') {
@@ -26,24 +28,25 @@ class TypeSheet<T> {
         } else {
             this.sheet = sheet;
         }
+        this.headerRowNum = ops?.headerRowNum || 1;
         this.customHeader = ops?.header;
     }
 
     find(args: {
-        where: (row: TypeSheetData<T>) => boolean;
-    }): TypeSheetData<T> | undefined {
+        where: (row: SheetManagerData<T>) => boolean;
+    }): SheetManagerData<T> | undefined {
         const { data } = this.getData();
         return data.find(args?.where || (() => true));
     }
 
     findMany(args: {
-        where: (row: TypeSheetData<T>) => boolean;
-    }): TypeSheetData<T>[] {
+        where: (row: SheetManagerData<T>) => boolean;
+    }): SheetManagerData<T>[] {
         const { data } = this.getData();
         return data.filter(args?.where || (() => true));
     }
 
-    findAll(): TypeSheetData<T>[] {
+    findAll(): SheetManagerData<T>[] {
         return this.getData().data;
     }
 
@@ -59,7 +62,7 @@ class TypeSheet<T> {
     }
 
     update(args: {
-        where: (row: TypeSheetData<T>) => boolean;
+        where: (row: SheetManagerData<T>) => boolean;
         set: Partial<T>;
     }): number {
         const { header, data } = this.getData();
@@ -87,13 +90,16 @@ class TypeSheet<T> {
         }
     }
 
-    private getData(): { header: (keyof T)[]; data: TypeSheetData<T>[] } {
+    private getData(): { header: (keyof T)[]; data: SheetManagerData<T>[] } {
         if (this.cache) {
             return this.cache;
         }
-        let [header, ...body] = this.sheet.getDataRange().getValues();
+        let [header, ...body] = this.sheet
+            .getDataRange()
+            .getValues()
+            .slice(this.headerRowNum - 1);
         header = this.customHeader || header;
-        const result: TypeSheetData<T>[] = [];
+        const result: SheetManagerData<T>[] = [];
         body.forEach((row, rowIdx) => {
             const obj = {} as (typeof result)[number];
             row.forEach((value, colIdx) => {
