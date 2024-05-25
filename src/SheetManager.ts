@@ -116,11 +116,20 @@ class SheetManager<T> {
             row.forEach((value, colIdx) => {
                 obj[header[colIdx] as keyof T] = value;
             });
-            obj.__rowIdx = rowIdx + 1;
-            obj.__rowNum = rowIdx + 2;
+            obj.__rowIdx = rowIdx + this.headerRowNum;
+            obj.__rowNum = rowIdx + this.headerRowNum + 1;
             result.push(obj);
         });
         this.cache = { header, data: result };
         return this.cache;
     }
+}
+
+function sheetManagerTest() {
+    const s = new SheetManager('test', { headerRowNum: 2 });
+    console.log(s.findAll());
+    s.update({
+        where: (row) => row.__rowNum == 4,
+        set: { head1: 'new value' },
+    });
 }
