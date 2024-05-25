@@ -28,6 +28,11 @@ class SheetManager {
     clearCache() {
         this.cache = undefined;
     }
+    clearData() {
+        const range = this.sheet.getRange(this.headerRowNum + 1, 1, this.sheet.getLastRow() - this.headerRowNum, this.sheet.getLastColumn());
+        range.clear();
+        this.clearCache();
+    }
     create(data) {
         const { header } = this.getData();
         const row = header.map((key) => data[key]);

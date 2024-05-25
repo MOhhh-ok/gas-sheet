@@ -54,6 +54,17 @@ class SheetManager<T> {
         this.cache = undefined;
     }
 
+    clearData() {
+        const range = this.sheet.getRange(
+            this.headerRowNum + 1,
+            1,
+            this.sheet.getLastRow() - this.headerRowNum,
+            this.sheet.getLastColumn()
+        );
+        range.clear();
+        this.clearCache();
+    }
+
     create(data: T): void {
         const { header } = this.getData();
         const row = header.map((key) => data[key]);
