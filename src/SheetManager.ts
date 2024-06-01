@@ -72,6 +72,16 @@ class SheetManager<T> {
         this.clearCache();
     }
 
+    createMany(dataList: T[]): void {
+        const { header } = this.getData();
+        const rows = dataList.map((data) => header.map((key) => data[key]));
+        const lastRow = this.sheet.getLastRow();
+        this.sheet
+            .getRange(lastRow + 1, 1, rows.length, header.length)
+            .setValues(rows);
+        this.clearCache();
+    }
+
     update(args: {
         where: (row: SheetManagerData<T>) => boolean;
         set: Partial<T>;
