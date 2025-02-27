@@ -1,30 +1,30 @@
-import * as R from 'remeda';
+export type Id = string | number;
+export type Cell = string | number | GoogleAppsScript.Base.Date;
 
-type Id = string | number;
-
-interface WithId {
+export interface WithId {
   id: Id;
 }
 
-class SheetTable<T extends WithId> {
+export class SheetTable<T extends WithId> {
   private sheet: GoogleAppsScript.Spreadsheet.Sheet;
   private firstRow: number;
   private dataMap: Record<Id, T>;
-  private dataToRow: (data: T) => (string | number)[];
-  private rowToData: (row: (string | number)[]) => T;
+  private dataToRow: (data: T) => Cell[];
+  private rowToData: (row: Cell[]) => T;
 
-  constructor(
-    sheet: GoogleAppsScript.Spreadsheet.Sheet | string,
-    dataToRow: (data: T) => (string | number)[],
-    rowToData: (row: (string | number)[]) => T,
-    firstRow?: number
-  ) {
+  constructor(params: {
+    sheet: GoogleAppsScript.Spreadsheet.Sheet | string;
+    dataToRow: (data: T) => Cell[];
+    rowToData: (row: Cell[]) => T;
+    firstRow?: number;
+  }) {
+    const { sheet, dataToRow, rowToData, firstRow } = params;
     this.firstRow = firstRow || 1;
     this.dataToRow = dataToRow;
     this.rowToData = rowToData;
     this.sheet = this.getSheet(sheet);
     const data = this.getData();
-    this.dataMap = R.indexBy(data, (d) => d.id);
+    this.dataMap = this.map(data);
   }
 
   upsert(data: T) {
@@ -39,10 +39,14 @@ class SheetTable<T extends WithId> {
     return this.dataMap[id];
   }
 
+  findAll() {
+    return Object.values(this.dataMap);
+  }
+
   sort(sortFn: (data: T) => any) {
     const data = Object.values(this.dataMap);
     data.sort(sortFn);
-    this.dataMap = R.indexBy(data, (d) => d.id);
+    this.dataMap = this.map(data);
   }
 
   save() {
@@ -72,5 +76,13 @@ class SheetTable<T extends WithId> {
       .getValues()
       .slice(this.firstRow - 1)
       .map(this.rowToData);
+  }
+
+  private map(data: T[]) {
+    const result: Record<Id, T> = {};
+    for (const d of data) {
+      result[d.id] = d;
+    }
+    return result;
   }
 }
