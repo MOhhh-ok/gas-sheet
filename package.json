@@ -1,5 +1,8 @@
 {
   "name": "@masa-dev/gas-sheet",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "0.1.0",
   "scripts": {
     "build": "tsc",
@@ -8,12 +11,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
+  "dependencies": {},
   "devDependencies": {
-    "@google/clasp": "^2.5.0",
-    "@types/google-apps-script": "^1.0.97",
-    "typescript": "^5.7.3"
-  },
-  "dependencies": {
-    "remeda": "^2.21.0"
+    "@types/google-apps-script": "^1.0.97"
   }
 }

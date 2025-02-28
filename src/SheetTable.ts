@@ -8,7 +8,7 @@ export interface WithId {
 export class SheetTable<T extends WithId> {
   private sheet: GoogleAppsScript.Spreadsheet.Sheet;
   private firstRow: number;
-  private dataMap: Record<Id, T>;
+  private dataMap: Map<Id, T>;
   private dataToRow: (data: T) => Cell[];
   private rowToData: (row: Cell[]) => T;
 
@@ -27,30 +27,36 @@ export class SheetTable<T extends WithId> {
     this.dataMap = this.map(data);
   }
 
-  upsert(data: T) {
-    this.dataMap[data.id] = data;
+  upsert(data: Partial<T> & { id: Id }) {
+    const key = data.id;
+    const existing = this.dataMap.get(key);
+    if (existing) {
+      this.dataMap.set(key, { ...existing, ...data });
+    } else {
+      this.dataMap.set(key, data as T);
+    }
   }
 
   delete(id: Id) {
-    delete this.dataMap[id];
+    this.dataMap.delete(id);
   }
 
   find(id: Id) {
-    return this.dataMap[id];
+    return this.dataMap.get(id);
   }
 
   findAll() {
-    return Object.values(this.dataMap);
+    return Array.from(this.dataMap.values());
   }
 
-  sort(sortFn: (data: T) => any) {
-    const data = Object.values(this.dataMap);
+  sort(sortFn: (a: T, b: T) => number) {
+    const data = Array.from(this.dataMap.values());
     data.sort(sortFn);
     this.dataMap = this.map(data);
   }
 
   save() {
-    const data = Object.values(this.dataMap);
+    const data = Array.from(this.dataMap.values());
     const rows = data.map(this.dataToRow);
     this.sheet
       .getRange(this.firstRow, 1, this.sheet.getLastRow(), rows[0].length)
@@ -71,17 +77,19 @@ export class SheetTable<T extends WithId> {
   }
 
   private getData() {
-    return this.sheet
+    const data = this.sheet
       .getDataRange()
       .getValues()
       .slice(this.firstRow - 1)
-      .map(this.rowToData);
+      .map(this.rowToData)
+      .filter(Boolean);
+    return data;
   }
 
   private map(data: T[]) {
-    const result: Record<Id, T> = {};
+    const result = new Map<Id, T>();
     for (const d of data) {
-      result[d.id] = d;
+      result.set(d.id, d);
     }
     return result;
   }
